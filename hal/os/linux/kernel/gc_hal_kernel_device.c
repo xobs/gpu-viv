@@ -25,7 +25,6 @@
 #include <linux/mm.h>
 #include <linux/mman.h>
 #include <linux/slab.h>
-#include <mach/hardware.h>
 #include <linux/pm_runtime.h>
 
 #define _GC_OBJ_ZONE    gcvZONE_DEVICE
@@ -780,6 +779,8 @@ gckGALDEVICE_Construct(
                     &device->contiguousPhysical,
                     &physAddr
                     );
+                printk(KERN_ERR ">>> Contiguous size: %ld  Base: %p  Physical: %p\n",
+                    device->contiguousSize, (void *)device->contiguousBase, (void *)device->contiguousPhysical);
 
                 if (gcmIS_SUCCESS(status))
                 {

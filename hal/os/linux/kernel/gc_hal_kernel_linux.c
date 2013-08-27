@@ -73,6 +73,10 @@ gckKERNEL_QueryVideoMemory(
     Interface->u.QueryVideoMemory.contiguousSize = device->contiguousSize;
     Interface->u.QueryVideoMemory.contiguousPhysical = device->contiguousPhysicalName;
 
+    printk(KERN_ERR "~~~ Query Contiguous size: %ld  Base: %p  Physical: %p\n",
+        device->contiguousSize, (void *)device->contiguousBase, (void *)device->contiguousPhysical);
+
+
     /* Success. */
     gcmkFOOTER_NO();
     return gcvSTATUS_OK;

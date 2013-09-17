@@ -80,17 +80,12 @@ task_notify_func(struct notifier_block *self, unsigned long val, void *data)
 #define _GC_OBJ_ZONE    gcvZONE_DRIVER
 
 #if gcdENABLE_FSCALE_VAL_ADJUST
-#ifdef CONFIG_THERMAL
-extern int register_thermal_notifier(struct notifier_block *nb);
-extern int unregister_thermal_notifier(struct notifier_block *nb);
-#else
-int register_thermal_notifier(struct notifier_block *nb) {
+static int register_thermal_notifier(struct notifier_block *nb) {
 	return -ENXIO;
 }
-int unregister_thermal_notifier(struct notifier_block *nb) {
+static int unregister_thermal_notifier(struct notifier_block *nb) {
 	return -ENXIO;
 }
-#endif //CONFIG_THERMAL
 #endif
 
 MODULE_DESCRIPTION("Vivante Graphics Driver");

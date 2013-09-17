@@ -34,10 +34,18 @@ This module supports device tree configuration.  Add the following entry to your
 Xorg driver
 -----------
 
-The xorg driver currently requires a separate DRI module, "Vivante GC2000:00".  Eventually we'll support imx-drm:00 which is shipping, but for now you'll have to build the module yourself.
+The xorg driver currently requires a separate DRI module, "Vivante
+GC2000:00".  Eventually we'll support imx-drm:00 which is shipping, but for
+now you'll have to build the module yourself.
 
 
 Versions
 --------
 
 This has been tested with Linux 3.11.
+
+Each Freescale release has its own branch here.
+
+Note that there are to versions of 4.6.9.6622.  The -old branch is from
+L3.0.35_4.0.0_130424 and is compatible with modules from that release.  The
+other version is compatible with the latest BSP, available from git.

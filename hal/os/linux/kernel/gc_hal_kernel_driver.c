@@ -23,6 +23,7 @@
 #include <linux/device.h>
 #include <linux/slab.h>
 #include <linux/notifier.h>
+#include <linux/of.h>
 #include "gc_hal_kernel_linux.h"
 #include "gc_hal_driver.h"
 
@@ -35,6 +36,17 @@
 #   include <mach/pxa3xx_dvfm.h>
 #endif
 
+#ifndef __devinit
+#define __devinit
+#endif
+
+#ifndef __devexit
+#define __devexit
+#endif
+
+#ifndef __devexit_p
+#define __devexit_p(x) x
+#endif
 
 #ifdef CONFIG_ANDROID_RESERVED_MEMORY_ACCOUNT
 #    include <linux/resmem_account.h>
@@ -69,14 +81,22 @@ task_notify_func(struct notifier_block *self, unsigned long val, void *data)
 #include <mach/viv_gpu.h>
 #else
 #include <linux/pm_runtime.h>
-#include <mach/busfreq.h>
 #endif
 /* Zone used for header/footer. */
 #define _GC_OBJ_ZONE    gcvZONE_DRIVER
 
 #if gcdENABLE_FSCALE_VAL_ADJUST
-extern int register_thermal_notifier(struct notifier_block *nb);
-extern int unregister_thermal_notifier(struct notifier_block *nb);
+//#ifdef CONFIG_THERMAL
+//extern int register_thermal_notifier(struct notifier_block *nb);
+//extern int unregister_thermal_notifier(struct notifier_block *nb);
+//#else
+int register_thermal_notifier(struct notifier_block *nb) {
+       return -ENXIO;
+}
+int unregister_thermal_notifier(struct notifier_block *nb) {
+       return -ENXIO;
+}
+//#endif //CONFIG_THERMAL
 #endif
 
 MODULE_DESCRIPTION("Vivante Graphics Driver");
@@ -1032,45 +1052,42 @@ static int __devinit gpu_probe(struct platform_device *pdev)
 {
     int ret = -ENODEV;
     struct resource* res;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
-	struct device_node *dn =pdev->dev.of_node;
-	const u32 *prop;
-#else
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,5,0)
 	struct viv_gpu_platform_data *pdata;
 #endif
     gcmkHEADER();
 
-    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "phys_baseaddr");
+    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "phys-base");
     if (res)
         baseAddress = res->start;
 
-    res = platform_get_resource_byname(pdev, IORESOURCE_IRQ, "irq_3d");
+    res = platform_get_resource_byname(pdev, IORESOURCE_IRQ, "irq-3d");
     if (res)
         irqLine = res->start;
 
-    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "iobase_3d");
+    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "iobase-3d");
     if (res)
     {
         registerMemBase = res->start;
         registerMemSize = res->end - res->start + 1;
     }
 
-    res = platform_get_resource_byname(pdev, IORESOURCE_IRQ, "irq_2d");
+    res = platform_get_resource_byname(pdev, IORESOURCE_IRQ, "irq-2d");
     if (res)
         irqLine2D = res->start;
 
-    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "iobase_2d");
+    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "iobase-2d");
     if (res)
     {
         registerMemBase2D = res->start;
         registerMemSize2D = res->end - res->start + 1;
     }
 
-    res = platform_get_resource_byname(pdev, IORESOURCE_IRQ, "irq_vg");
+    res = platform_get_resource_byname(pdev, IORESOURCE_IRQ, "irq-vg");
     if (res)
         irqLineVG = res->start;
 
-    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "iobase_vg");
+    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "iobase-vg");
     if (res)
     {
         registerMemBaseVG = res->start;
@@ -1078,10 +1095,11 @@ static int __devinit gpu_probe(struct platform_device *pdev)
     }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
-	prop = of_get_property(dn, "contiguousbase", NULL);
-	if(prop)
-		contiguousBase = *prop;
-	of_property_read_u32(dn,"contiguoussize", (u32 *)&contiguousSize);
+    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "contiguous-addr");
+    if (res) {
+        contiguousBase = res->start;
+        contiguousSize = res->end - res->start + 1;
+    }
 #else
     pdata = pdev->dev.platform_data;
     if (pdata) {
@@ -1254,13 +1272,13 @@ MODULE_DEVICE_TABLE(of, mxs_gpu_dt_ids);
 #ifdef CONFIG_PM
 static int gpu_runtime_suspend(struct device *dev)
 {
-	release_bus_freq(BUS_FREQ_HIGH);
+	//release_bus_freq(BUS_FREQ_HIGH);
 	return 0;
 }
 
 static int gpu_runtime_resume(struct device *dev)
 {
-	request_bus_freq(BUS_FREQ_HIGH);
+	//request_bus_freq(BUS_FREQ_HIGH);
 	return 0;
 }
 

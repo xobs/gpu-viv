@@ -30,14 +30,14 @@
 #include <linux/dma-mapping.h>
 #include <linux/slab.h>
 #include <linux/idr.h>
-#include <mach/hardware.h>
 #include <linux/workqueue.h>
 #include <linux/idr.h>
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,23)
 #include <linux/math64.h>
 #endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
-#include <mach/common.h>
+#include <linux/of.h>
+#include <linux/of_address.h>
 #endif
 #include <linux/delay.h>
 #include <linux/pm_runtime.h>
@@ -234,6 +234,72 @@ typedef struct _gcsOSTIMER
 /******************************************************************************\
 ******************************* Private Functions ******************************
 \******************************************************************************/
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
+#define SRC_SCR                         0x000
+#define SRC_SIMR                        0x018
+#define SRC_GPR1                        0x020
+#define BP_SRC_SCR_WARM_RESET_ENABLE    0
+#define BP_SRC_SCR_GPU3D_RST            1
+#define BP_SRC_SCR_VPU_RST              2
+#define BP_SRC_SCR_GPU2D_RST            4
+#define BP_SRC_SCR_CORE1_RST            14
+#define BP_SRC_SCR_CORE1_ENABLE         22
+#define BP_SRC_SIMR_MASK_VPU            1
+#define SRC_IPU1_SWRST                  0x0080
+#define SRC_IPU2_SWRST                  0x1000
+static void __iomem *src_base;
+static DEFINE_SPINLOCK(scr_lock);
+static int imx_src_reset_gpu(int gpucore_id)
+{
+    u32 bit_offset, val;
+    unsigned long flags;
+
+    if (!src_base) {
+        struct device_node *np;
+        np = of_find_compatible_node(NULL, NULL, "fsl,imx6q-src");
+        src_base = of_iomap(np, 0);
+        WARN_ON(!src_base);
+    }
+
+
+    /*
+     * gcvCORE_MAJOR    0x0
+     * gcvCORE_2D       0x1
+     * cvCORE_VG        0x2
+     */
+
+    if (gpucore_id == 0x0)
+        bit_offset = BP_SRC_SCR_GPU3D_RST;
+    else if ((gpucore_id == 0x1) || (gpucore_id == 0x2))
+        bit_offset = BP_SRC_SCR_GPU2D_RST;
+    else
+        return -1;
+
+    spin_lock_irqsave(&scr_lock, flags);
+    val = readl_relaxed(src_base + SRC_SCR);
+    val |= (1 << bit_offset);
+    writel_relaxed(val, src_base + SRC_SCR);
+    spin_unlock_irqrestore(&scr_lock, flags);
+
+    val = jiffies;
+    while ((readl_relaxed(src_base + SRC_SCR) &
+            (1 << bit_offset)) != 0) {
+        if (time_after(jiffies, (unsigned long)(val +
+            msecs_to_jiffies(10)))) {
+            printk(KERN_WARNING "gpu %d: gpu hw reset timeout\n", gpucore_id);
+            break;
+        }
+    }
+    return 0;
+}
+
+static void imx_gpc_power_up_pu(bool flag)
+{
+	return;
+}
+#endif //LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
+
 
 static gctINT
 _GetProcessID(
@@ -6827,6 +6893,7 @@ gckOS_SetGPUPower(
     struct clk *clk_2dcore = Os->device->clk_2d_core;
     struct clk *clk_2d_axi = Os->device->clk_2d_axi;
     struct clk *clk_vg_axi = Os->device->clk_vg_axi;
+    int ret;
 
     gctBOOL oldClockState = gcvFALSE;
     gctBOOL oldPowerState = gcvFALSE;
@@ -6852,12 +6919,12 @@ gckOS_SetGPUPower(
     }
 	if((Power == gcvTRUE) && (oldPowerState == gcvFALSE))
 	{
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,5,0)		
+//#if LINUX_VERSION_CODE < KERNEL_VERSION(3,5,0)		
 	    if(!IS_ERR(Os->device->gpu_regulator))
-            	regulator_enable(Os->device->gpu_regulator);
-#else
-	    imx_gpc_power_up_pu(true);
-#endif
+            	ret = regulator_enable(Os->device->gpu_regulator);
+//#else
+//	    imx_gpc_power_up_pu(true);
+//#endif
 
 #ifdef CONFIG_PM
 		pm_runtime_get_sync(Os->device->pmdev);

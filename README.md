@@ -25,9 +25,9 @@ This module supports device tree configuration.  Add the following entry to your
                                 "gpu2d_clk", "gpu2d_axi_clk",
                                 "openvg_axi_clk";
                         interrupts = <0 9 0x04>, <0 10 0x04>, <0 11 0x04>;
-                        interrupt-names = "irq-3d", "irq-2d", "irq-vg";
+                        interrupt-names = "irq_3d", "irq_2d", "irq_vg";
                         reg = <0 0>, <0x00130000 0x4000>, <0x00134000 0x4000>, <0x02204000 0x4000>;
-                        reg-names = "phys-addr", "iobase-3d", "iobase-2d", "iobase-vg";
+                        reg-names = "phys_addr", "iobase_3d", "iobase_2d", "iobase_vg";
                 };
         };
 

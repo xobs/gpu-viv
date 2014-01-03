@@ -1057,37 +1057,37 @@ static int __devinit gpu_probe(struct platform_device *pdev)
 #endif
     gcmkHEADER();
 
-    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "phys-base");
+    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "phys_base");
     if (res)
         baseAddress = res->start;
 
-    res = platform_get_resource_byname(pdev, IORESOURCE_IRQ, "irq-3d");
+    res = platform_get_resource_byname(pdev, IORESOURCE_IRQ, "irq_3d");
     if (res)
         irqLine = res->start;
 
-    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "iobase-3d");
+    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "iobase_3d");
     if (res)
     {
         registerMemBase = res->start;
         registerMemSize = res->end - res->start + 1;
     }
 
-    res = platform_get_resource_byname(pdev, IORESOURCE_IRQ, "irq-2d");
+    res = platform_get_resource_byname(pdev, IORESOURCE_IRQ, "irq_2d");
     if (res)
         irqLine2D = res->start;
 
-    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "iobase-2d");
+    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "iobase_2d");
     if (res)
     {
         registerMemBase2D = res->start;
         registerMemSize2D = res->end - res->start + 1;
     }
 
-    res = platform_get_resource_byname(pdev, IORESOURCE_IRQ, "irq-vg");
+    res = platform_get_resource_byname(pdev, IORESOURCE_IRQ, "irq_vg");
     if (res)
         irqLineVG = res->start;
 
-    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "iobase-vg");
+    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "iobase_vg");
     if (res)
     {
         registerMemBaseVG = res->start;
@@ -1095,7 +1095,7 @@ static int __devinit gpu_probe(struct platform_device *pdev)
     }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
-    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "contiguous-addr");
+    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "contiguous_addr");
     if (res) {
         contiguousBase = res->start;
         contiguousSize = res->end - res->start + 1;
